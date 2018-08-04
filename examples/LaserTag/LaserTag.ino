@@ -1,4 +1,4 @@
-#include "src/library/LaserUtils.h"
+#include <LaserUtils.h>
 
 // Pin assignments
 #define IR_RX 2                                                            // pin the IR receiver (left data pin) is connected to
