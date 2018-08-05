@@ -7,7 +7,6 @@ class Player {
     int damage_inflicted;
     Player();
 };
-
 class PlayerManager {
   public:
     PlayerManager(int max_players);
@@ -22,7 +21,8 @@ class LaserRxTx {
   public:
     LaserRxTx(byte ir_rx, byte ir_tx);
     void fireLaser(char* message);
-    String irRecv();
+	char* laserRecv();
+    char* irRecv(int msg_len);
   private:
     byte _ir_rx;
     byte _ir_tx;
@@ -33,3 +33,16 @@ class LaserRxTx {
     void sendMessage(String message);
 };
 
+class LaserMsg {
+  public:
+	static void setMyShotMessage(char* name, char attack=5, char team=0);  // note: attack is a NUMBER 0-255
+	static char* getMyShotMessage();
+	static char* getMyName();
+	static char getMyAttack();
+	static char getMyTeam();
+    static char* getName(char* message);
+	static char getAttack(char* message);
+	static char getTeam(char* message); 
+  private:
+    static bool storedCheck();
+};
