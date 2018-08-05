@@ -48,9 +48,17 @@ LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {
 
 // sends a pulse of 38khz square waves for a while (delay1), then nothing for a while (delay2)
 void LaserRxTx::sendPulse(int delay1, int delay2) {
-  tone(_ir_tx, 38000);                                             // turns on the 38khz (38000hz) square wave on the transmit pin
-  delayMicroseconds(delay1/2);                                     // waits for a moment, half as long as it should (AND NOBODY KNOWS WHY...quirky)
-  noTone(_ir_tx);                                                  // turns off the square wave
+  //tone(_ir_tx, 38000);                                             // turns on the 38khz (38000hz) square wave on the transmit pin
+  //delayMicroseconds(delay1/2);                                     // waits for a moment, half as long as it should (AND NOBODY KNOWS WHY...quirky)
+  //noTone(_ir_tx);                                                  // turns off the square wave
+  
+  for (int i=0; i<delay1/26; i++) {
+    digitalWrite(_ir_tx, HIGH);
+	delayMicroseconds(9);
+	digitalWrite(_ir_tx, LOW);
+	delayMicroseconds(9);
+  }
+  
   delayMicroseconds(delay2);                                       // waits for a moment sending nothing
 }
 
