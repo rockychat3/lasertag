@@ -15,6 +15,7 @@
 
 int im_hit = false;                                                        // a true/false variable that records if you're being hit
 unsigned long last_fired = 0;                                              // a number that records when the last shot was fired
+bool shooting_now = false;
 PlayerManager player_manager = PlayerManager(MAX_PLAYERS);  
 LaserRxTx laser = LaserRxTx(IR_RX, IR_TX);
 
@@ -28,7 +29,8 @@ void setup() {
 }
 
 void irInterrupt() {                                                      // the function called when the IR receiver sees a new message
-  im_hit = true;                                                          // tells the main loop that we have been hit, but doesn't bother it immediately, like leaving a note on the fridge
+  if (not shooting_now)
+	im_hit = true;                                                          // tells the main loop that we have been hit, but doesn't bother it immediately, like leaving a note on the fridge
 }
 
 bool shot(String attacker_name) { 
@@ -70,7 +72,9 @@ void loop() {                                                             // in 
   if ((digitalRead(BLASTER_TRIGGER) == LOW) &&                            // when it checks here, if the trigger is down...
       (millis()-last_fired > FIRE_RATE)) {                                // ...AND if it has been FIRE_RATE milliseconds since the last shot...
     last_fired = millis();                                                // store the current time as the new "last_fired" time
-    laser.fireLaser(USERNAME);                                            // fire off a message (the username)
+    shooting_now = true;
+	laser.fireLaser(USERNAME);                                            // fire off a message (the username)
+	shooting_now = false;
   }
 }
 
