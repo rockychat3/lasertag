@@ -10,8 +10,8 @@
 #define IS_TEAM_GAME false                                                 // true or false to state team or solo mode
 #define USERNAME "BAP6"                                                    // a name with MSG_LEN characters unique to you /* CHANGE */
 #define MAX_PLAYERS 5                                                      // max number of new players that could hit you in a game (save memory if lower)
-#define FIRE_RATE 400                                                      // milliseconds since the last time a shot started
-#define DEAD_DELAY 2000                                                    // milliseconds you stay dead for after being hit
+#define FIRE_RATE 100                                                      // milliseconds since the last time a shot started
+#define DEAD_DELAY 250                                                     // milliseconds you stay dead for after being hit
 
 int im_hit = false;                                                        // a true/false variable that records if you're being hit
 unsigned long last_fired = 0;                                              // a number that records when the last shot was fired
@@ -22,6 +22,7 @@ void setup() {
   Serial.begin(9600);                                                     // so we can receive messages / watch for errors
   pinMode(BLASTER_TRIGGER, INPUT_PULLUP);                                 // trigger as an input that defaults to high (5V)
   pinMode(SPEAKER, OUTPUT);												  // setup speaker pin as an output 
+  pinMode(IR_TX, OUTPUT);												  // setup IR sending pin as an output 
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);      // the function irInterrupt is called when the trigger is pressed (that pin FALLS from high to low voltage)
 }
 
