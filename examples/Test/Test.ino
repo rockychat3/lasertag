@@ -4,15 +4,9 @@
 #define IR_TX 13                                                       // pin the IR transmitter is connected to
 #define BLASTER_TRIGGER 12                                             // pin the trigger is connected to
 #define SPEAKER 11                                                     // pin the piezo speaker is connected to
-                                                                       //Other constants:
-#define MAX_PLAYERS 5                                                  // max number of new players that could hit you in a game (save memory if lower)
-#define FIRE_RATE 250                                                  // milliseconds since the last time a shot started
-#define DEAD_DELAY 3000                                                // milliseconds you stay dead for after being hit
-                                                                       //Variables used throughout the code:
+
 int im_hit = false;                                                    // a true/false variable that records if you're being hit
-unsigned long last_fired = 0;                                          // a number that records when the last shot was fired
 bool shooting_now = false;                                             // a true/false variable that records if you're shooting
-PlayerManager player_manager = PlayerManager(MAX_PLAYERS);             // an object that keeps track of the players in the game 
 LaserRxTx laser = LaserRxTx(IR_RX, IR_TX);                             // an object that lets you fire and receive IR signals
 
 void setup() {                                                         //Function run once when Arduino is powered on
@@ -22,10 +16,6 @@ void setup() {                                                         //Functio
   pinMode(IR_TX, OUTPUT);                                              // setup IR sending pin as an output 
   pinMode(IR_RX, INPUT);                                               // setup IR receiving pin as an input 
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);   // the function irInterrupt is called when an IR signal is being received
-
-  LaserMsg::setMyShotMessage("AP"); ///////TESTING ONLY
-  Serial.print("Welcome, ");
-  Serial.println(LaserMsg::getMyName());                               // looks up your username in EEPROM memory and greets you
 }
 
 void irInterrupt() {                                                   //Function called when the IR receiver sees a new message
@@ -33,35 +23,11 @@ void irInterrupt() {                                                   //Functio
     im_hit = true;                                                     // records that we have been hit, but doesn't take any action immediately, like leaving a note on the fridge
 }
 
-void shot(char* attack_msg) {                                          //Function called when you get shot (it gets sent the shooter's codename)
+bool shot(char* attack_msg) {                                          //Function called when you get shot (it gets sent the shooter's codename)
   if (attack_msg == "")                                                // if no message received, cancel the shot
-    return;                                                             
-
-  if (LaserMsg::getMyTeam()) {                                         // if you're playing a team game (team is not 0)
-    if (LaserMsg::getMyTeam() == LaserMsg::getTeam(attack_msg)) {      // ...no getting shot by your teammates
-      Serial.print("friendly fire from: ");
-      Serial.println(LaserMsg::getName(attack_msg));
-      return;                                                           
-    }
-  }
-  
+    return;  
   Serial.print("Attacked by: ");
-  Serial.println(LaserMsg::getName(attack_msg));
-
-  Player attacker = 
-    player_manager.lookupPlayer(LaserMsg::getName(attack_msg));        // get the player with attributes to update
-  attacker.shot_count += 1;                                            // tally one more shot for the attacker
-  attacker.damage_inflicted += 1;                                      // tally one more damage point
-  
-  tone(SPEAKER, 392);                                                  // sound played when you're shot 
-  delay(200);
-  tone(SPEAKER, 261);
-  delay(200);
-  noTone(SPEAKER);
-  
-  //DISPLAY CODE                                                       // Display attacker name on screen
-                                    
-  delay(DEAD_DELAY-400);                                               // disable shooting for however long you are "dead" (subtract tone time above)
+  Serial.println(LaserMsg::getName(attack_msg));                       
 }
 
 // The main loop of code always running
@@ -71,12 +37,18 @@ void loop() {                                                          //Functio
     shot(laser.laserRecv());                                           // starts the irRecv() function and return the attacker's code to a function to do the shot logic
     im_hit = false;                                                    // reset the hit flag to false since you are no longer hit
   }
-                                                                       // next, check if you're trying to shoot
-  if ((digitalRead(BLASTER_TRIGGER) == LOW) &&                         // when it checks here, if the trigger is down...
-      (millis()-last_fired > FIRE_RATE)) {                             // ...AND if it has been FIRE_RATE milliseconds since the last shot...
-    last_fired = millis();                                             // store the current time as the new "last_fired" time
+                                                                       
+  if (digitalRead(BLASTER_TRIGGER) == LOW) {                           // next, check if you're trying to shoot
+    Serial.println("Trigger pressed!");
     shooting_now = true;                                               // tell the program you're shooting so it doesn't cause issues with your own receiver
-    laser.fireLaser(LaserMsg::getMyShotMessage());                     // fire off a message (the username)
+    laser.fireLaser("TEST");                                           // fire off a message
+    tone(SPEAKER, 392);                                                // testing the sound 
+    delay(200);
+    tone(SPEAKER, 261);
+    delay(200);
+    noTone(SPEAKER); 
+	delay(2000);
+    // display test (simultaneous w/ piezo)
     shooting_now = false;                                              // tell the program you're done shooting
   }
 }
