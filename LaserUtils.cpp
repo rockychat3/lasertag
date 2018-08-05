@@ -35,7 +35,7 @@ Player PlayerManager::lookupPlayer(String player_name) {
 
 #define MSG_LEN 4                                                  // number of bytes in the data being transmitted
 #define PULSE_TIME 300                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
-#define ERROR_TIME 12000                                              // microseconds in a single loop before a transmission times out
+#define ERROR_TIME 12000                                           // microseconds in a single loop before a transmission times out
 
 LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {
   _ir_rx = ir_rx;
@@ -48,15 +48,15 @@ LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {
 
 // sends a pulse of 38khz square waves for a while (delay1), then nothing for a while (delay2)
 void LaserRxTx::sendPulse(int delay1, int delay2) {
-  //tone(_ir_tx, 38000);                                             // turns on the 38khz (38000hz) square wave on the transmit pin
-  //delayMicroseconds(delay1/2);                                     // waits for a moment, half as long as it should (AND NOBODY KNOWS WHY...quirky)
-  //noTone(_ir_tx);                                                  // turns off the square wave
+  //tone(_ir_tx, 38000);                                           // turns on the 38khz (38000hz) square wave on the transmit pin
+  //delayMicroseconds(delay1/2);                                   // waits for a moment, half as long as it should (AND NOBODY KNOWS WHY...quirky)
+  //noTone(_ir_tx);                                                // turns off the square wave
   
-  for (int i=0; i<delay1/26; i++) {
+  for (int i=0; i<delay1/26; i++) {                                // generates the right number of cycles of a 38khz (38000hz) square wave on the transmit pin
     digitalWrite(_ir_tx, HIGH);
-	delayMicroseconds(9);
-	digitalWrite(_ir_tx, LOW);
-	delayMicroseconds(9);
+    delayMicroseconds(9);
+    digitalWrite(_ir_tx, LOW);
+    delayMicroseconds(9);
   }
   
   delayMicroseconds(delay2);                                       // waits for a moment sending nothing
@@ -110,15 +110,15 @@ String LaserRxTx::irRecv() {
 
   for (int i=0; i<2; i++) {                                        // filters out the junk at the start of transmission
     time_started = micros();
-	while (digitalRead(_ir_rx)) { 
+    while (digitalRead(_ir_rx)) { 
       if(micros()-time_started>ERROR_TIME) {                       // in case stuck in loop
         Serial.println("Timed out on high signal");
         return "";                                                 // return "" (empty)
       }
     }
-	
+    
     time_started = micros();
-	while (not digitalRead(_ir_rx)) { 
+    while (not digitalRead(_ir_rx)) { 
       if(micros()-time_started>ERROR_TIME) {                       // in case stuck in loop
         Serial.println("Timed out on low signal");
         return "";                                                 // escape with empty 
@@ -128,25 +128,25 @@ String LaserRxTx::irRecv() {
   
   for (int cycles = 0; cycles < MSG_LEN; cycles++) {               // loop through each byte
                        
-	char data_byte = 0;
-	
+    char data_byte = 0;
+    
     for (int i=0; i<8; i++) {                                      // loop to receive each bit
       
-	  time_started = micros();                                     // record the time that the signal first went high
-	  while (digitalRead(_ir_rx)) {                                // wait on the high signal until it goes low
+      time_started = micros();                                     // record the time that the signal first went high
+      while (digitalRead(_ir_rx)) {                                // wait on the high signal until it goes low
         if(micros()-time_started>ERROR_TIME) {                     // in case stuck in loop
           Serial.println("Timed out on read high");
           return "";                                               // escape with empty 
         }
       }
-	  
+      
       data_byte = data_byte << 1;                                  // shift the bits in the data_byte byte to prepare for the next loop through
       unsigned long time_difference = micros()-time_started;       // check how long it has been since the signal first went high until now 
-	  if (time_difference > 2*PULSE_TIME)                          // if the time diff is more than two pulse times (expects three), it is a 1, if less than two pulse times (expects one), it is a 0
+      if (time_difference > 2*PULSE_TIME)                          // if the time diff is more than two pulse times (expects three), it is a 1, if less than two pulse times (expects one), it is a 0
         data_byte++;                                               // no need to add zero, so it only adds 1 for a 1
       
-	  time_started = micros();                                     // record the time that the signal first went high
-	  while (not digitalRead(_ir_rx)) {                            // wait on the low signal until it goes high
+      time_started = micros();                                     // record the time that the signal first went high
+      while (not digitalRead(_ir_rx)) {                            // wait on the low signal until it goes high
         if(micros()-time_started>ERROR_TIME) {                     // in case stuck in loop
           Serial.println("Timed out on read low");
           return "";                                               // escape with empty 
@@ -157,7 +157,7 @@ String LaserRxTx::irRecv() {
       Serial.println("Exiting on garbled character");
       return "";                                                   // if there are any non-standard characters, assume a garbled message and return "" (empty)
     }
-	
+    
     message = message + data_byte;                                 // add the new character of data to the message
   }
   
