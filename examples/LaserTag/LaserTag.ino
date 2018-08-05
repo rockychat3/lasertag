@@ -4,6 +4,7 @@
 #define IR_RX 2                                                            // pin the IR receiver (left data pin) is connected to
 #define IR_TX 13                                                           // pin the IR transmitter is connected to
 #define BLASTER_TRIGGER 12                                                 // pin the trigger is connected to
+#define SPEAKER 11														   // pin the piezo speaker is connected to
 
 // Other constants
 #define IS_TEAM_GAME false                                                 // true or false to state team or solo mode
@@ -20,6 +21,7 @@ LaserRxTx laser = LaserRxTx(IR_RX, IR_TX);
 void setup() {
   Serial.begin(9600);                                                     // so we can receive messages / watch for errors
   pinMode(BLASTER_TRIGGER, INPUT_PULLUP);                                 // trigger as an input that defaults to high (5V)
+  pinMode(SPEAKER, OUTPUT);												  // setup speaker pin as an output 
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);      // the function irInterrupt is called when the trigger is pressed (that pin FALLS from high to low voltage)
 }
 
@@ -45,6 +47,13 @@ bool shot(String attacker_name) {
   attacker.shot_count += 1;                                               // tally one more shot for the attacker
   attacker.damage_inflicted += 1;                                         // tally one more damage point
   
+  tone(SPEAKER, 440);													  // sound played when you're shot 
+  delay(200);
+  noTone(SPEAKER);
+                                                                          // Display attacker name on screen
+																		
+  delay(DEAD_DELAY);                                                 	  // disable shooting for however long you are "dead"
+  
   return true;                                                            // back to the logic on what to do if shot
 }
 
@@ -52,16 +61,9 @@ bool shot(String attacker_name) {
 void loop() {                                                             // in each loop, first check if you got shot:
  
   if (im_hit) {                                                           // when it checks here, if you were hit... 
-    String attacker_code = laser.irRecv();                                // ...it will start the irRecv() function and return the attacker's code
-    bool if_shot = shot(attacker_code);                                   // passes the attacker's name to a function to do the shot logic
-    if (if_shot) {
-                                                                          // Display attacker name on screen
-                                                                          // Play dying sound
-      delay(DEAD_DELAY);                                                  // disable shooting for however long you are "dead"
-    }
+    shot(laser.irRecv());                           					  // starts the irRecv() function and return the attacker's code to a function to do the shot logic
     im_hit = false;                                                       // reset the hit flag to false since you are no longer hit
   }
-
                                                                           // next, check if you're trying to shoot
   if ((digitalRead(BLASTER_TRIGGER) == LOW) &&                            // when it checks here, if the trigger is down...
       (millis()-last_fired > FIRE_RATE)) {                                // ...AND if it has been FIRE_RATE milliseconds since the last shot...

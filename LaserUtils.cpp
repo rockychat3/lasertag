@@ -89,8 +89,8 @@ void LaserRxTx::fireLaser(char* message) {
 // *note that all data is sent and received left to right (bytes AND strings)
 String LaserRxTx::irRecv() { 
   String message = "";  // the initially empty message to receive
-  int timeout = millis();
-  int time_high = 0;
+  unsigned long timeout = millis();
+  unsigned long time_high = 0;
   for (int i=0; i<2; i++) {  // filters out the junk at the start of transmission
     while (digitalRead(_ir_rx)) { 
       if(millis()-timeout>ERROR_TIMEOUT) { // in case stuck in loop
@@ -113,7 +113,7 @@ String LaserRxTx::irRecv() {
         if(millis()-timeout>ERROR_TIMEOUT) break;  // in case stuck in loop
       }
       data_byte = data_byte << 1;  // shift the bits in the data_byte byte to prepare for the next loop through
-      int time_difference = micros()-time_high;  // check how long it has been since the signal first went high until now 
+      unsigned long time_difference = micros()-time_high;  // check how long it has been since the signal first went high until now 
       if (time_difference > 2*PULSE_TIME)  // if the time diff is more than two pulse times (expects three), it is a 1, if less than two pulse times (expects one), it is a 0
         data_byte++;  // no need to add zero, so it only adds 1 for a 1
       while (not digitalRead(_ir_rx)) {  // wait on the low signal until it goes high
