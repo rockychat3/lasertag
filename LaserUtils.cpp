@@ -34,8 +34,8 @@ Player PlayerManager::lookupPlayer(String player_name) {
 /////////////////////////////////////////////////////////////////////////////////
 
 #define MSG_LEN 4                                                  // number of bytes in the data being transmitted
-#define PULSE_TIME 300                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
-#define ERROR_TIME 60                                              // milliseconds in a single loop before a transmission times out
+#define PULSE_TIME 3000                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
+#define ERROR_TIME 150                                              // milliseconds in a single loop before a transmission times out
 
 LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {
   _ir_rx = ir_rx;
@@ -147,7 +147,7 @@ String LaserRxTx::irRecv() {
         }
       }
     }
-	
+	Serial.println(data_byte);
     if ((data_byte < 32)||(data_byte > 126)) {
       Serial.println("Exiting on garbled character");
       return "";                                                   // if there are any non-standard characters, assume a garbled message and return "" (empty)

@@ -23,6 +23,7 @@ void setup() {
   pinMode(BLASTER_TRIGGER, INPUT_PULLUP);                                 // trigger as an input that defaults to high (5V)
   pinMode(SPEAKER, OUTPUT);												  // setup speaker pin as an output 
   pinMode(IR_TX, OUTPUT);												  // setup IR sending pin as an output 
+  pinMode(IR_RX, INPUT);
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);      // the function irInterrupt is called when the trigger is pressed (that pin FALLS from high to low voltage)
 }
 
