@@ -34,8 +34,8 @@ Player PlayerManager::lookupPlayer(String player_name) {
 /////////////////////////////////////////////////////////////////////////////////
 
 #define MSG_LEN 4                                                  // number of bytes in the data being transmitted
-#define PULSE_TIME 1200                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
-#define ERROR_TIME 60                                              // milliseconds in a single loop before a transmission times out
+#define PULSE_TIME 300                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
+#define ERROR_TIME 12000                                              // microseconds in a single loop before a transmission times out
 
 LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {
   _ir_rx = ir_rx;
@@ -109,18 +109,18 @@ String LaserRxTx::irRecv() {
   unsigned long time_started, time_high;
 
   for (int i=0; i<2; i++) {                                        // filters out the junk at the start of transmission
-    time_started = millis();
+    time_started = micros();
 	while (digitalRead(_ir_rx)) { 
-      if(millis()-time_started>ERROR_TIME) {                       // in case stuck in loop
+      if(micros()-time_started>ERROR_TIME) {                       // in case stuck in loop
         Serial.println("Timed out on high signal");
         return "";                                                 // return "" (empty)
       }
     }
 	
-    time_started = millis();
+    time_started = micros();
 	while (not digitalRead(_ir_rx)) { 
-      if(millis()-time_started>ERROR_TIME) {                       // in case stuck in loop
-        Serial.println("Timed out on high signal");
+      if(micros()-time_started>ERROR_TIME) {                       // in case stuck in loop
+        Serial.println("Timed out on low signal");
         return "";                                                 // escape with empty 
       }
     }
@@ -132,30 +132,27 @@ String LaserRxTx::irRecv() {
 	
     for (int i=0; i<8; i++) {                                      // loop to receive each bit
       
-	  time_high = micros();                                        // record the time that the signal first went high
-	  time_started = millis();
+	  time_started = micros();                                     // record the time that the signal first went high
 	  while (digitalRead(_ir_rx)) {                                // wait on the high signal until it goes low
-        if(millis()-time_started>ERROR_TIME) {                     // in case stuck in loop
+        if(micros()-time_started>ERROR_TIME) {                     // in case stuck in loop
           Serial.println("Timed out on read high");
           return "";                                               // escape with empty 
         }
       }
 	  
       data_byte = data_byte << 1;                                  // shift the bits in the data_byte byte to prepare for the next loop through
-      unsigned long time_difference = micros()-time_high;          // check how long it has been since the signal first went high until now 
-      Serial.println(time_difference);
+      unsigned long time_difference = micros()-time_started;       // check how long it has been since the signal first went high until now 
 	  if (time_difference > 2*PULSE_TIME)                          // if the time diff is more than two pulse times (expects three), it is a 1, if less than two pulse times (expects one), it is a 0
         data_byte++;                                               // no need to add zero, so it only adds 1 for a 1
       
-	  time_started = millis();
+	  time_started = micros();                                     // record the time that the signal first went high
 	  while (not digitalRead(_ir_rx)) {                            // wait on the low signal until it goes high
-        if(millis()-time_started>ERROR_TIME) {                     // in case stuck in loop
+        if(micros()-time_started>ERROR_TIME) {                     // in case stuck in loop
           Serial.println("Timed out on read low");
           return "";                                               // escape with empty 
         }
       }
     }
-	Serial.println(data_byte);
     if ((data_byte < 32)||(data_byte > 126)) {
       Serial.println("Exiting on garbled character");
       return "";                                                   // if there are any non-standard characters, assume a garbled message and return "" (empty)
