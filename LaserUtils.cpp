@@ -210,8 +210,10 @@ static char* LaserMsg::getMyShotMessage() {
   for (int i=1; i<=4; i++) {  
     char name_character;           
     EEPROM.get(i, name_character); 
-    message[i] = name_character;  
+    message[i-1] = name_character;  
   }
+  Serial.print("Sending: ");
+  Serial.println(message);
   return message;
 }
 
