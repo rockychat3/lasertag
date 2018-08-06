@@ -47,8 +47,8 @@ void shot(char* secret_msg) {                                          //Functio
   if (secret_msg == "")                                                // if no message received, cancel the shot
     return;                                                             
 
-  lcd.clear();                                                         // all LCD messages should first clear the screen and turn on the backlight
-  lcd.print(secret_msg);
+  lcd.clear();                                                         // all LCD messages should first clear the screen
+  lcd.print(secret_msg);                                               // prints a message to the LCD screen
     
   tone(SPEAKER, 392);                                                  // sound played when you get the message 
   delay(200);
@@ -61,7 +61,7 @@ void shot(char* secret_msg) {                                          //Functio
 void loop() {                                                          //Function run in a loop forever: checks if you're shooting and/or shot
  
   if (im_hit) {                                                        // when it checks here, if you were hit... 
-    shot(laser.irRecv(16));                                            // starts the irRecv() function and return the sender's code to a function to do the shot logic
+    shot(laser.irRecv(24));                                            // starts the irRecv() function and return the sender's code to a function to do the shot logic
     im_hit = false;                                                    // reset the hit flag to false since you are no longer hit
   }
                                                                        

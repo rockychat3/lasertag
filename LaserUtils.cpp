@@ -97,7 +97,8 @@ void LaserRxTx::sendMessage(String message) {
 
 // Shoots the IR signal out
 void LaserRxTx::fireLaser(char* message) {
-  Serial.println("Firing");
+  Serial.print("Firing ");
+  Serial.println(message);
   sendPulse(8000, 4000);                                           // initial carrier pulse to flag receiver
   sendMessage(message);                                            // data to be transmitted /* CHANGE */
   sendPulse(1000, 0);                                              // final carrier pulse to close
