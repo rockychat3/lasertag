@@ -36,7 +36,7 @@ Player PlayerManager::lookupPlayer(String player_name) {
 
 
 #define MSG_LEN 4                                                  // number of bytes in the data being transmitted
-#define PULSE_TIME 300                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
+#define PULSE_TIME 500                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
 #define ERROR_TIME 12000                                           // microseconds in a single loop before a transmission times out
 
 LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {

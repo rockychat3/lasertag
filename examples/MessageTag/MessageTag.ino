@@ -34,8 +34,8 @@ void irInterrupt() {                                                   //Functio
 
 
 char* messageCleaner(char* uncleaned) {                                // clean up messages
-  char cleaned_message[32];
-  for (int i=0; i<32; i++) {
+  char cleaned_message[8];
+  for (int i=0; i<8; i++) {
     if (i >= strlen(uncleaned)) 
       cleaned_message[i] = uncleaned[i];
     else
@@ -63,13 +63,14 @@ void shot(char* secret_msg) {                                          //Functio
 void loop() {                                                          //Function run in a loop forever: checks if you're shooting and/or shot
  
   if (im_hit) {                                                        // when it checks here, if you were hit... 
-    shot(laser.irRecv(32));                                            // starts the irRecv() function and return the sender's code to a function to do the shot logic
+    shot(laser.irRecv(8));                                            // starts the irRecv() function and return the sender's code to a function to do the shot logic
     im_hit = false;                                                    // reset the hit flag to false since you are no longer hit
   }
                                                                        
   if (digitalRead(BLASTER_TRIGGER) == LOW) {                           // next, check if you're trying to shoot
     shooting_now = true;                                               // tell the program you're shooting so it doesn't cause issues with your own receiver
-    laser.fireLaser(messageCleaner(my_secret_message));                // fire off the cleaned up secret message (exactly 32 characters after cleaning)
+    //laser.fireLaser(messageCleaner(my_secret_message));                // fire off the cleaned up secret message (exactly 32 characters after cleaning)
+	laser.fireLaser("AbCdEfGh");
     delay(1000);
 	shooting_now = false;                                              // tell the program you're done shooting
   }
