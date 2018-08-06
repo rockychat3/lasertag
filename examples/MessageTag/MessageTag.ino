@@ -5,6 +5,8 @@
 #define IR_TX 13                                                       // pin the IR transmitter is connected to
 #define BLASTER_TRIGGER 12                                             // pin the trigger is connected to
 #define SPEAKER 11                                                     // pin the piezo speaker is connected to
+
+#define MSG_LENGTH 16                                                  // length of transmitted and received messages (must be same on ALL blasters)
                                                                        //Variables used throughout the code:
 int im_hit = false;                                                    // a true/false variable that records if you're being hit
 unsigned long last_fired = 0;                                          // a number that records when the last shot was fired
@@ -13,7 +15,7 @@ LaserRxTx laser = LaserRxTx(IR_RX, IR_TX);                             // an obj
 LiquidCrystal_I2C lcd(0x27, 16, 2);                                    // Set the LCD address to 0x27 for a 16 chars and 2 line display
 
 
-char* my_secret_message = "TYPE A MESSAGE HERE";                       // Note that the message maxes out at 32 characters long, including spaces
+char* my_secret_message = "TYPE A MESSAGE HERE";                       // Note that the message cuts off at 16 characters long, including spaces
 
 
 void setup() {                                                         //Function run once when Arduino is powered on
@@ -33,13 +35,17 @@ void irInterrupt() {                                                   //Functio
 }
 
 
-char* messageCleaner(char uncleaned []) {                                // clean up messages
-  char* cleaned_message = "                        ";
-  for (int i=0; i<24; i++) {
-    if (i < strlen(uncleaned)) 
-      cleaned_message[i] = uncleaned[i];
+char* messageCleaner(String uncleaned) {                                // clean up messages
+  String cleaned = "";
+  for (int i=0; i<MSG_LENGTH; i++) {
+    if (i < uncleaned.length()) 
+      cleaned += uncleaned.charAt(i);  // copy anything up to the max character limit (set by loop)
+    else 
+      cleaned += ' ';  // pad any short strings
   }
-  return cleaned_message;
+  char cleaned_formatted[MSG_LENGTH+1];
+  cleaned.toCharArray(cleaned_formatted, MSG_LENGTH+1);
+  return cleaned_formatted;
 }
 
 
@@ -61,14 +67,13 @@ void shot(char* secret_msg) {                                          //Functio
 void loop() {                                                          //Function run in a loop forever: checks if you're shooting and/or shot
  
   if (im_hit) {                                                        // when it checks here, if you were hit... 
-    shot(laser.irRecv(24));                                            // starts the irRecv() function and return the sender's code to a function to do the shot logic
+    shot(laser.irRecv(MSG_LENGTH));                                    // starts the irRecv() function and return the sender's code to a function to do the shot logic
     im_hit = false;                                                    // reset the hit flag to false since you are no longer hit
   }
                                                                        
   if (digitalRead(BLASTER_TRIGGER) == LOW) {                           // next, check if you're trying to shoot
     shooting_now = true;                                               // tell the program you're shooting so it doesn't cause issues with your own receiver
     laser.fireLaser(messageCleaner(my_secret_message));                // fire off the cleaned up secret message (exactly 32 characters after cleaning)
-    //laser.fireLaser("AbCdEfGhIjKlMnOpQrStUvWx");
     delay(1000);
     shooting_now = false;                                              // tell the program you're done shooting
   }
