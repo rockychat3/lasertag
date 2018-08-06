@@ -33,8 +33,8 @@ void irInterrupt() {                                                   //Functio
 }
 
 
-  char* cleaned_message = "                        ";
 char* messageCleaner(char uncleaned []) {                                // clean up messages
+  char* cleaned_message = "                        ";
   for (int i=0; i<24; i++) {
     if (i < strlen(uncleaned)) 
       cleaned_message[i] = uncleaned[i];
