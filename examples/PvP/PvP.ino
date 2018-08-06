@@ -40,14 +40,6 @@ void shot(char* attack_msg) {                                          //Functio
   if (attack_msg == "")                                                // if no message received, cancel the shot
     return;                                                             
 
-  if (LaserMsg::getMyTeam()) {                                         // if you're playing a team game (team is not 0)
-    if (LaserMsg::getMyTeam() == LaserMsg::getTeam(attack_msg)) {      // ...no getting shot by your teammates
-      Serial.print("friendly fire from: ");
-      Serial.println(LaserMsg::getName(attack_msg));
-      return;                                                           
-    }
-  }
-  
   lcd.clear();                                                         // all LCD messages should first clear the screen and turn on the backlight
   lcd.backlight();
   lcd.print("Attacked by: ");
