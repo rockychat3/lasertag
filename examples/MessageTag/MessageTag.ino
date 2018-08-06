@@ -33,9 +33,9 @@ void irInterrupt() {                                                   //Functio
 }
 
 
-char* messageCleaner(char* uncleaned) {                                // clean up messages
-  char* cleaned_message = "                ";
-  for (int i=0; i<16; i++) {
+  char* cleaned_message = "                        ";
+char* messageCleaner(char uncleaned []) {                                // clean up messages
+  for (int i=0; i<24; i++) {
     if (i < strlen(uncleaned)) 
       cleaned_message[i] = uncleaned[i];
   }
@@ -68,7 +68,7 @@ void loop() {                                                          //Functio
   if (digitalRead(BLASTER_TRIGGER) == LOW) {                           // next, check if you're trying to shoot
     shooting_now = true;                                               // tell the program you're shooting so it doesn't cause issues with your own receiver
     laser.fireLaser(messageCleaner(my_secret_message));                // fire off the cleaned up secret message (exactly 32 characters after cleaning)
-	//laser.fireLaser("AbCdEfGhIjKlMnOp");
+	//laser.fireLaser("AbCdEfGhIjKlMnOpQrStUvWx");
     delay(1000);
 	shooting_now = false;                                              // tell the program you're done shooting
   }
