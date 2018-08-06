@@ -54,10 +54,10 @@ void loop() {                                                          //Functio
     tone(SPEAKER, 261);
     delay(200);
     noTone(SPEAKER); 
-	delay(2000);
+    delay(2000);
 
     lcd.clear();                                                       // clear the screen
-	lcd.noBacklight();                                                 // turn off the screen (save battery)
+    lcd.noBacklight();                                                 // turn off the screen (save battery)
 
     shooting_now = false;                                              // tell the program you're done shooting
   }

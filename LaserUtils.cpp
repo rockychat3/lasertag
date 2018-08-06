@@ -179,7 +179,7 @@ char* LaserRxTx::irRecv(int msg_len) {
 // store the message fired out by the IR beam in-game
 static void LaserMsg::setMyShotMessage(char* name, char attack=5, char team=0) {
   if ((attack < 1) || (attack > 100))
-	attack = 5;
+    attack = 5;
   EEPROM.put(0, 42);
   EEPROM.put(1, name[0]);
   EEPROM.put(2, name[1]);
@@ -193,9 +193,9 @@ static bool LaserMsg::storedCheck() {
   byte check_byte;           
   EEPROM.get(0, check_byte);
   if (check_byte == 42)                                            // the check byte 42 is an arbitary way to see if we set the memory or not
-	return true;
+    return true;
   else
-	return false;
+    return false;
 }
 
 
