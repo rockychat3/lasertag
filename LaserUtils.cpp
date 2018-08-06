@@ -119,7 +119,7 @@ char* LaserRxTx::irRecv(int msg_len) {
     time_started = micros();
     while (digitalRead(_ir_rx)) { 
       if(micros()-time_started>ERROR_TIME) {                       // in case stuck in loop
-        Serial.println("Timed out on high signal");
+        Serial.println("IR pre-data timed out on high signal");
         return "";                                                 // return "" (empty)
       }
     }
@@ -127,7 +127,7 @@ char* LaserRxTx::irRecv(int msg_len) {
     time_started = micros();
     while (not digitalRead(_ir_rx)) { 
       if(micros()-time_started>ERROR_TIME) {                       // in case stuck in loop
-        Serial.println("Timed out on low signal");
+        Serial.println("IR pre-data timed out on low signal");
         return "";                                                 // escape with empty 
       }
     }
@@ -142,7 +142,7 @@ char* LaserRxTx::irRecv(int msg_len) {
       time_started = micros();                                     // record the time that the signal first went high
       while (digitalRead(_ir_rx)) {                                // wait on the high signal until it goes low
         if(micros()-time_started>ERROR_TIME) {                     // in case stuck in loop
-          Serial.println("Timed out on read high");
+          Serial.println("IR bit read timed out on high signal");
           return "";                                               // escape with empty 
         }
       }
@@ -155,19 +155,16 @@ char* LaserRxTx::irRecv(int msg_len) {
       time_started = micros();                                     // record the time that the signal first went high
       while (not digitalRead(_ir_rx)) {                            // wait on the low signal until it goes high
         if(micros()-time_started>ERROR_TIME) {                     // in case stuck in loop
-          Serial.println("Timed out on read low");
+          Serial.println("IR bit read timed out on low signal");
           return "";                                               // escape with empty 
         }
       }
-    }
-    if ((data_byte < 32)||(data_byte > 126)) {
-      Serial.println("Exiting on garbled character");
-      return "";                                                   // if there are any non-standard characters, assume a garbled message and return "" (empty)
     }
     
     message[cycles] = data_byte;                                 // add the new character of data to the message
   }
   
+  Serial.print("Message received: ");
   Serial.println(message);                                         // for debugging: print the received message
   return message;                                                  // return the received message text
 }

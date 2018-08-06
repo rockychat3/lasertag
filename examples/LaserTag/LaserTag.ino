@@ -1,4 +1,5 @@
 #include <LaserUtils.h>                                                // the file that implements most of the behind-the-scenes code 
+#include <LiquidCrystal_I2C.h>                                         // the file/library for the display screen
                                                                        //Pin assignments:
 #define IR_RX 2                                                        // pin the IR receiver (left data pin) is connected to
 #define IR_TX 13                                                       // pin the IR transmitter is connected to
@@ -14,9 +15,11 @@ unsigned long last_fired = 0;                                          // a numb
 bool shooting_now = false;                                             // a true/false variable that records if you're shooting
 PlayerManager player_manager = PlayerManager(MAX_PLAYERS);             // an object that keeps track of the players in the game 
 LaserRxTx laser = LaserRxTx(IR_RX, IR_TX);                             // an object that lets you fire and receive IR signals
+LiquidCrystal_I2C lcd(0x27, 16, 2);                                    // Set the LCD address to 0x27 for a 16 chars and 2 line display
 
 void setup() {                                                         //Function run once when Arduino is powered on
   Serial.begin(9600);                                                  // so we can receive messages / watch for errors
+  lcd.begin();                                                         // initialize the LCD
   pinMode(BLASTER_TRIGGER, INPUT_PULLUP);                              // trigger as an input that defaults to high (5V)
   pinMode(SPEAKER, OUTPUT);                                            // setup speaker pin as an output 
   pinMode(IR_TX, OUTPUT);                                              // setup IR sending pin as an output 
@@ -24,8 +27,8 @@ void setup() {                                                         //Functio
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);   // the function irInterrupt is called when an IR signal is being received
 
   LaserMsg::setMyShotMessage("AP"); ///////TESTING ONLY
-  Serial.print("Welcome, ");
-  Serial.println(LaserMsg::getMyName());                               // looks up your username in EEPROM memory and greets you
+  lcd.print("Welcome,        ");                                       // looks up your username in EEPROM memory and greets you
+  lcd.print(LaserMsg::getMyName());
 }
 
 void irInterrupt() {                                                   //Function called when the IR receiver sees a new message
@@ -45,23 +48,26 @@ void shot(char* attack_msg) {                                          //Functio
     }
   }
   
-  Serial.print("Attacked by: ");
-  Serial.println(LaserMsg::getName(attack_msg));
+  lcd.clear();                                                         // all LCD messages should first clear the screen and turn on the backlight
+  lcd.backlight();
+  lcd.print("Attacked by: ");
+  lcd.print(LaserMsg::getName(attack_msg));                            // parses apart the attack message to find the name of the attacker
 
   Player attacker = 
     player_manager.lookupPlayer(LaserMsg::getName(attack_msg));        // get the player with attributes to update
   attacker.shot_count += 1;                                            // tally one more shot for the attacker
   attacker.damage_inflicted += 1;                                      // tally one more damage point
   
-  tone(SPEAKER, 392);                                                  // sound played when you're shot 
+  tone(SPEAKER, 392);                                                  // "dead" sound played when you're shot 
   delay(200);
   tone(SPEAKER, 261);
   delay(200);
   noTone(SPEAKER);
-  
-  //DISPLAY CODE                                                       // Display attacker name on screen
-                                    
+                              
   delay(DEAD_DELAY-400);                                               // disable shooting for however long you are "dead" (subtract tone time above)
+  
+  lcd.clear();                                                         // clear the screen and back to action!
+  lcd.noBacklight();
 }
 
 // The main loop of code always running
