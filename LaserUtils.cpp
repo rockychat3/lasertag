@@ -201,19 +201,10 @@ static bool LaserMsg::storedCheck() {
 
 // Finds your Arduino's last-set full message in EEPROM
 static char* LaserMsg::getMyShotMessage() {
-  if (!LaserMsg::storedCheck()) {
-    char default_value[5] = {'0','0','A','0','\0'};
-    return default_value;
-  }
-
-  /*char message[5];
-  for (int i=1; i<=4; i++) {  
-    char name_character;           
-    EEPROM.get(i, name_character); 
-    message[i-1] = name_character;  
-  }
-  message[4] = '\0';*/
-  char* message = "0000";
+  char* message = "00A0";
+  if (!LaserMsg::storedCheck())
+    return message;
+  
   message[0] = EEPROM.read(1); 
   message[1] = EEPROM.read(2); 
   message[2] = EEPROM.read(3); 
@@ -261,12 +252,6 @@ static char* LaserMsg::getName(char* message) {
   char* username = "00";
   username[0] = message[0];
   username[1] = message[1];
-  //String new_string = message.substring(0,2);
-  //char username[3];
-  //new_string.toCharArray(username, 3);
-  //username[0] = message[0];
-  //username[1] = message[1];
-  //username[2] = '\0';
   return username;
 }
 
