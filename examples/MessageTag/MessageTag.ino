@@ -26,6 +26,8 @@ void setup() {                                                         //Functio
   pinMode(IR_TX, OUTPUT);                                              // setup IR sending pin as an output 
   pinMode(IR_RX, INPUT);                                               // setup IR receiving pin as an input 
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);   // the function irInterrupt is called when an IR signal is being received
+  lcd.clear();
+  lcd.noBacklight(); 
 }
 
 
@@ -53,14 +55,19 @@ void shot(char* secret_msg) {                                          //Functio
   if (secret_msg == "")                                                // if no message received, cancel the shot
     return;                                                             
 
-  lcd.clear();                                                         // all LCD messages should first clear the screen
+  lcd.backlight();
   lcd.print(secret_msg);                                               // prints a message to the LCD screen
     
   tone(SPEAKER, 392);                                                  // sound played when you get the message 
   delay(200);
   tone(SPEAKER, 261);
   delay(200);
-  noTone(SPEAKER);           
+  noTone(SPEAKER); 
+
+  delay(5000);                                                         // disable shooting for however long you are "dead" (subtract tone time above)
+  
+  lcd.clear();                                                         // clear the screen and back to action!
+  lcd.noBacklight();  
 }
 
 
@@ -74,7 +81,7 @@ void loop() {                                                          //Functio
   if (digitalRead(BLASTER_TRIGGER) == LOW) {                           // next, check if you're trying to shoot
     shooting_now = true;                                               // tell the program you're shooting so it doesn't cause issues with your own receiver
     laser.fireLaser(messageCleaner(my_secret_message));                // fire off the cleaned up secret message (exactly 32 characters after cleaning)
-    delay(1000);
+    delay(500);
     shooting_now = false;                                              // tell the program you're done shooting
   }
 }
