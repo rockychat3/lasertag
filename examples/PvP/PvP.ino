@@ -26,8 +26,9 @@ void setup() {                                                         //Functio
   pinMode(IR_RX, INPUT);                                               // setup IR receiving pin as an input 
   attachInterrupt(digitalPinToInterrupt(IR_RX),irInterrupt,FALLING);   // the function irInterrupt is called when an IR signal is being received
 
-  LaserMsg::setMyShotMessage("AP"); ///////TESTING ONLY
-  lcd.print("Welcome,        ");                                       // looks up your username in EEPROM memory and greets you
+  LaserMsg::setMyShotMessage("P1",'A','0');  // COMMENT OUT after first setup with YOUR initials
+  
+  lcd.print("Welcome, ");                                              // looks up your username in EEPROM memory and greets you
   lcd.print(LaserMsg::getMyName());
 }
 
@@ -42,7 +43,7 @@ void shot(char* attack_msg) {                                          //Functio
 
   lcd.clear();                                                         // all LCD messages should first clear the screen and turn on the backlight
   lcd.backlight();
-  lcd.print("Attacked by: ");
+  lcd.print("Attacked by:  ");
   lcd.print(LaserMsg::getName(attack_msg));                            // parses apart the attack message to find the name of the attacker
 
   Player attacker = 

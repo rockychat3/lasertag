@@ -113,7 +113,7 @@ char* LaserRxTx::laserRecv() {
 // reads the incoming transmission and stores the data received as a String
 // *note that all data is sent and received left to right (bytes AND strings)
 char* LaserRxTx::irRecv(int msg_len) { 
-  char message[msg_len];                                          // the initially empty message to receive
+  char message[msg_len+1];                                          // the initially empty message to receive
   unsigned long time_started, time_high;
 
   for (int i=0; i<2; i++) {                                        // filters out the junk at the start of transmission
@@ -162,11 +162,11 @@ char* LaserRxTx::irRecv(int msg_len) {
       }
     }
     
-    message[cycles] = data_byte;                                 // add the new character of data to the message
+    message[cycles] = data_byte;                                   // add the new character of data to the message
   }
-  
-  Serial.print("Message received: ");
-  Serial.println(message);                                         // for debugging: print the received message
+  message[MSG_LEN] = '\0';                                         // special terminating character for all char arrays
+  //Serial.print("Message received: ");
+  //Serial.println(message);                                         // for debugging: print the received message
   return message;                                                  // return the received message text
 }
 
@@ -177,13 +177,13 @@ char* LaserRxTx::irRecv(int msg_len) {
 #include <EEPROM.h>                                                // used to set/read variables in special EEPROM memory
 
 // store the message fired out by the IR beam in-game
-static void LaserMsg::setMyShotMessage(char* name, char attack=5, char team=0) {
-  if ((attack < 1) || (attack > 100))
-    attack = 5;
+static void LaserMsg::setMyShotMessage(char* name, char attack='A', char team='0') {
+  if ((attack < 'A') || (attack > 'Z'))
+    attack = 'A';
   EEPROM.put(0, 42);
   EEPROM.put(1, name[0]);
   EEPROM.put(2, name[1]);
-  EEPROM.put(3, attack);                                           // note that this is stored as a NUMBER of type char (0 to 255), defaults to 5
+  EEPROM.put(3, attack);                                           // note that this is stored as a NUMBER of type char (10 to 200), defaults to 5
   EEPROM.put(4, team);                                             // team defaults to 0
 }
 
@@ -202,18 +202,22 @@ static bool LaserMsg::storedCheck() {
 // Finds your Arduino's last-set full message in EEPROM
 static char* LaserMsg::getMyShotMessage() {
   if (!LaserMsg::storedCheck()) {
-    char default_value[4] = {'0','0',5,0};
+    char default_value[5] = {'0','0','A','0','\0'};
     return default_value;
   }
 
-  char message[4];
+  /*char message[5];
   for (int i=1; i<=4; i++) {  
     char name_character;           
     EEPROM.get(i, name_character); 
     message[i-1] = name_character;  
   }
-  Serial.print("Sending: ");
-  Serial.println(message);
+  message[4] = '\0';*/
+  char* message = "0000";
+  message[0] = EEPROM.read(1); 
+  message[1] = EEPROM.read(2); 
+  message[2] = EEPROM.read(3); 
+  message[3] = EEPROM.read(4); 
   return message;
 }
 
@@ -223,9 +227,9 @@ static char* LaserMsg::getMyName() {
   if (!LaserMsg::storedCheck()) 
     return "00";
 
-  char username[2];
-  EEPROM.get(1, username[0]); 
-  EEPROM.get(2, username[1]); 
+  char* username = "00";
+  username[0] = EEPROM.read(1); 
+  username[1] = EEPROM.read(2); 
   return username;
 }
 
@@ -233,7 +237,7 @@ static char* LaserMsg::getMyName() {
 // Finds your Arduino's last-set attack power in EEPROM
 static char LaserMsg::getMyAttack() {
   if (!LaserMsg::storedCheck()) 
-    return 5;
+    return 'A';
 
   char attack;
   EEPROM.get(3, attack); 
@@ -244,7 +248,7 @@ static char LaserMsg::getMyAttack() {
 // Finds your Arduino's last-set team in EEPROM
 static char LaserMsg::getMyTeam() {
   if (!LaserMsg::storedCheck()) 
-    return 0;
+    return '0';
 
   char team;
   EEPROM.get(4, team); 
@@ -254,9 +258,15 @@ static char LaserMsg::getMyTeam() {
 
 // Parses out the name from a message
 static char* LaserMsg::getName(char* message) {
-  char username[2];
+  char* username = "00";
   username[0] = message[0];
   username[1] = message[1];
+  //String new_string = message.substring(0,2);
+  //char username[3];
+  //new_string.toCharArray(username, 3);
+  //username[0] = message[0];
+  //username[1] = message[1];
+  //username[2] = '\0';
   return username;
 }
 
