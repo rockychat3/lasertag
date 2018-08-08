@@ -11,36 +11,30 @@ void setup() {                                                         //Functio
 }
 
 void shot(char* username, char attack, char team) {                     //Function called when you get shot (it gets sent the shooter's codename)
-  if (LaserMsg::checkFriendlyFire(team)) {                              // check if you got shot by a teammate
-    lcd.setCursor(0,0);
-    lcd.print("Friendly Fire   ");
-    delay(500);
-  } else {                                                               // if it was NOT a teammate... 
-    lcd.clear();
-    lcd.print("Last hit by:  ");
-    lcd.print(username);                                                 
-    lcd.setCursor(0,1);                                                  // moves to the 2nd line of the display
-    game_manager.recordHit(username, 1);                   // record the hit to track hp and player stats
+  lcd.clear();
+  lcd.print("Last hit by:  ");
+  lcd.print(username);                                                 
+  lcd.setCursor(0,1);                                                  // moves to the 2nd line of the display
+  game_manager.recordHit(username, 1);                   // record the hit to track hp and player stats
     
-    // dead to-dos
-    lcd.print("You is very dead");
-    tone(SPEAKER, 392);                                                // alive sound played when you're out of hp
-    delay(1000);
-    tone(SPEAKER, 261);
-    delay(1000);
-    noTone(SPEAKER);
-    delay(2000);
-  
-    // back alive to-dos
-    game_manager.revive(25);
-    lcd.clear();
-    lcd.setCursor(0,1); 
-    lcd.print("FULL HEALTH");
-    tone(SPEAKER, 261);                                                // alive sound played when you're out of hp
-    delay(100);
-    tone(SPEAKER, 392);
-    delay(100);
-    noTone(SPEAKER);  
-  }
+  // dead to-dos
+  lcd.print("You is very dead");
+  tone(SPEAKER, 392);                                                // alive sound played when you're out of hp
+  delay(1000);
+  tone(SPEAKER, 261);
+  delay(1000);
+  noTone(SPEAKER);
+  delay(2000);
+ 
+  // back alive to-dos
+  game_manager.revive(25);
+  lcd.clear();
+  lcd.setCursor(0,1); 
+  lcd.print("FULL HEALTH");
+  tone(SPEAKER, 261);                                                // alive sound played when you're out of hp
+  delay(100);
+  tone(SPEAKER, 392);
+  delay(100);
+  noTone(SPEAKER);  
 }
 
