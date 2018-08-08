@@ -8,21 +8,65 @@ Player::Player() {
 }
 
 
-PlayerManager::PlayerManager(int max_players) {
-  players = new Player[max_players];
-  _player_count = 0;
-  _max_players = max_players;
+Attack::Attack() {
+  name = "";
+  shortcut = '\0';
+  damage = 0;
+  shot_delay = 0;
 }
 
 
-Player PlayerManager::lookupPlayer(String player_name) {  
+Team::Team() {
+  name = "";
+}
+
+
+GameManager::GameManager() {
+  _player_count = 0;
+  _attack_count = 0;
+  _team_count = 0;
+  this->addTeam("Solo");     // hardcode the "Solo" team 
+  
+  hp = 1;
+  lives_used = 0;
+}
+
+
+void GameManager::addAttack(char* name_, int damage_, int shot_delay_) {
+  if (_attack_count >= 10) {
+    Serial.println("Max attack types reached");
+    return;
+  }
+  
+  attacks[_attack_count].name = name_;                   
+  attacks[_attack_count].shortcut = name_[0];                   
+  attacks[_attack_count].damage = damage_;                   
+  attacks[_attack_count].shot_delay = shot_delay_;                   
+  _attack_count++;                                                 
+  return;
+}
+
+
+void GameManager::addTeam(char* team) {
+  if (_team_count >= 10) {
+    Serial.println("Max team types reached");
+    return;
+  }
+  
+  teams[_team_count].name = team;                   
+  _team_count++;                                                 
+  
+  return;
+}
+
+
+Player GameManager::lookupPlayer(String player_name) {  
   for(int i=0; i<_player_count; i++) {                             // search through existing players:
-    if (player_name == players[i].username)
-      return players[i];
+    if (player_name == players[i].username)  return players[i];
   }
 
-  if (_player_count >= _max_players) {
-    Serial.println("Max player count reached, returning first added user");
+  if (_player_count >= 10) {
+    Serial.println("Max player count reached, returning first added user to avoid crash");
     return players[0];
   }
   
@@ -32,10 +76,57 @@ Player PlayerManager::lookupPlayer(String player_name) {
 }
 
 
+char* GameManager::listAttackName(int index) {
+  return attacks[index % _attack_count].name;                      // mod to prevent overflow for indecisive people
+}
+
+
+char* GameManager::listTeamName(int index) {
+  Serial.println(index);
+  Serial.println(_team_count);
+  return teams[index % _team_count].name;                           // mod to prevent overflow for indecisive people
+}
+
+
+int GameManager::lookupShotDelay(char attack_shortcut) {
+  for (int i=0; i<_attack_count; i++) {
+	Serial.println("index, attack_shortcut, attacks[i].shortcut, delay)");
+	Serial.println(i);
+	Serial.println(attack_shortcut);
+	Serial.println(attacks[i].shortcut);
+	Serial.println(attacks[i].shot_delay);
+	
+	if (attacks[i].shortcut == attack_shortcut)  return attacks[i].shot_delay;
+  }
+  return 0;
+}
+
+
+int GameManager::lookupDamage(char attack_shortcut) {
+  for (int i=0; i<_attack_count; i++) {
+	if (attacks[i].shortcut == attack_shortcut)  return attacks[i].damage;
+  }
+  return 0;
+}
+
+
+int GameManager::recordHit(char* attacker_name, int damage) {
+  Player attacker = this->lookupPlayer(attacker_name);
+  attacker.shot_count += 1;                                            // tally one more shot for the attacker
+  attacker.damage_inflicted += damage;
+  
+  hp -= damage;
+  return hp;
+}
+
+
+void GameManager::revive(int hp_) {
+  hp = hp_;
+  lives_used += 1;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 
-
-#define MSG_LEN 4                                                  // number of bytes in the data being transmitted
 #define PULSE_TIME 500                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission
 #define ERROR_TIME 12000                                           // microseconds in a single loop before a transmission times out
 
@@ -50,10 +141,6 @@ LaserRxTx::LaserRxTx(byte ir_rx, byte ir_tx) {
 
 // sends a pulse of 38khz square waves for a while (delay1), then nothing for a while (delay2)
 void LaserRxTx::sendPulse(int delay1, int delay2) {
-  //tone(_ir_tx, 38000);                                           // turns on the 38khz (38000hz) square wave on the transmit pin
-  //delayMicroseconds(delay1/2);                                   // waits for a moment, half as long as it should (AND NOBODY KNOWS WHY...quirky)
-  //noTone(_ir_tx);                                                // turns off the square wave
-  
   for (int i=0; i<delay1/26; i++) {                                // generates the right number of cycles of a 38khz (38000hz) square wave on the transmit pin
     digitalWrite(_ir_tx, HIGH);
     delayMicroseconds(9);
@@ -80,10 +167,8 @@ void LaserRxTx::sendOne(){
 // reads through all 8 bits of a byte and calls for 0's and 1's to be transmitted
 void LaserRxTx::sendCharacter(char character) {
   for(int i = 7; i >= 0; i--) {                                    // loops from index 7,6,5,...1,0
-    if(bitRead(character, i))                                      // checks if this bit (i) is a 1 or 0
-      sendOne();
-    else
-      sendZero();
+    if(bitRead(character, i))  sendOne();                          // checks if this bit (i) is a 1 or 0    
+    else  sendZero();
   }
 }
 
@@ -164,7 +249,7 @@ char* LaserRxTx::irRecv(int msg_len) {
     
     message[cycles] = data_byte;                                   // add the new character of data to the message
   }
-  message[MSG_LEN] = '\0';                                         // special terminating character for all char arrays
+  message[msg_len] = '\0';                                         // special terminating character for all char arrays
   //Serial.print("Message received: ");
   //Serial.println(message);                                         // for debugging: print the received message
   return message;                                                  // return the received message text
@@ -177,14 +262,16 @@ char* LaserRxTx::irRecv(int msg_len) {
 #include <EEPROM.h>                                                // used to set/read variables in special EEPROM memory
 
 // store the message fired out by the IR beam in-game
-static void LaserMsg::setMyShotMessage(char* name, char attack='A', char team='0') {
-  if ((attack < 'A') || (attack > 'Z'))
-    attack = 'A';
+static void LaserMsg::setMyName(char* name) {
   EEPROM.put(0, 42);
   EEPROM.put(1, name[0]);
   EEPROM.put(2, name[1]);
-  EEPROM.put(3, attack);                                           // note that this is stored as a NUMBER of type char (10 to 200), defaults to 5
-  EEPROM.put(4, team);                                             // team defaults to 0
+}
+
+// store the message fired out by the IR beam in-game
+static void LaserMsg::setMyParameters(char attack, char team) {
+  EEPROM.put(3, attack);                                           
+  EEPROM.put(4, team);                                             
 }
 
 
@@ -192,18 +279,15 @@ static void LaserMsg::setMyShotMessage(char* name, char attack='A', char team='0
 static bool LaserMsg::storedCheck() {
   byte check_byte;           
   EEPROM.get(0, check_byte);
-  if (check_byte == 42)                                            // the check byte 42 is an arbitary way to see if we set the memory or not
-    return true;
-  else
-    return false;
+  if (check_byte == 42)  return true;                              // the check byte 42 is an arbitary way to see if we set the memory or not
+  else  return false;
 }
 
 
 // Finds your Arduino's last-set full message in EEPROM
 static char* LaserMsg::getMyShotMessage() {
-  char* message = "00A0";
-  if (!LaserMsg::storedCheck())
-    return message;
+  char* message = "00AS";
+  if (!LaserMsg::storedCheck())  return message;
   
   message[0] = EEPROM.read(1); 
   message[1] = EEPROM.read(2); 
@@ -215,8 +299,7 @@ static char* LaserMsg::getMyShotMessage() {
 
 // Finds your Arduino's last-set username in EEPROM
 static char* LaserMsg::getMyName() {
-  if (!LaserMsg::storedCheck()) 
-    return "00";
+  if (!LaserMsg::storedCheck())  return "00";
 
   char* username = "00";
   username[0] = EEPROM.read(1); 
@@ -227,8 +310,7 @@ static char* LaserMsg::getMyName() {
 
 // Finds your Arduino's last-set attack power in EEPROM
 static char LaserMsg::getMyAttack() {
-  if (!LaserMsg::storedCheck()) 
-    return 'A';
+  if (!LaserMsg::storedCheck())  return 'A';
 
   char attack;
   EEPROM.get(3, attack); 
@@ -239,11 +321,24 @@ static char LaserMsg::getMyAttack() {
 // Finds your Arduino's last-set team in EEPROM
 static char LaserMsg::getMyTeam() {
   if (!LaserMsg::storedCheck()) 
-    return '0';
+    return 'S';
 
   char team;
   EEPROM.get(4, team); 
   return team;
+}
+
+
+// Compares your last-set team to the incoming value to check for friendly fire Finds your Arduino's last-set team in EEPROM
+static bool LaserMsg::checkFriendlyFire(char other_team) {
+  if (!LaserMsg::storedCheck()) 
+    return false;
+
+  char team;
+  EEPROM.get(4, team); 
+  if (team == 'S')  return false;
+  if (team == other_team)  return true;
+  return false;
 }
 
 
@@ -265,4 +360,12 @@ static char LaserMsg::getAttack(char* message) {
 // Parses out the team from a message
 static char LaserMsg::getTeam(char* message) {
   return message[3];
+}
+
+// Checks if the message is garbled in any way 
+static bool LaserMsg::checkSafe(char* message) {
+  for (int i=0; i<4; i++) {
+	if ((message[i] < '0') || (message[i] > 'z'))  return false;
+  }
+  return true;
 }
