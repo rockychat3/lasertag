@@ -125,6 +125,20 @@ void GameManager::revive(int hp_) {
   lives_used += 1;
 }
 
+
+void GameManager::dataDump(LiquidCrystal_I2C lcd) {
+  for (int i=0; i<_player_count; i++) {
+	lcd.clear();
+    lcd.print(players[i].username);
+	lcd.setCursor(0,1);
+    lcd.print("Hits: ");
+    lcd.print(players[i].shot_count);
+    lcd.print(", HP: ");
+    lcd.print(players[i].damage_inflicted);
+  }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////
 
 #define PULSE_TIME 500                                             // minimum length (microseconds) of a pulse of carrier frequency / delay in the transmission

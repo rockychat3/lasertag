@@ -2,6 +2,7 @@
 #define _LaserUtils_h
 
 #include <Arduino.h> 
+#include <LiquidCrystal_I2C.h>
 
 class Player {  
   public:
@@ -43,6 +44,8 @@ class GameManager {
 	void revive(int hp_);
 	int lives_used;
 	int hp;
+	
+	void dataDump(LiquidCrystal_I2C lcd);
 	
   private:
     Player players[10];  // hardcode max of 10 players
